@@ -1,0 +1,59 @@
+python3
+
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+
+import math
+#import pylab as P
+import tensorflow as tf
+import csv
+
+#setwd
+#read in CLEANED data - no NAs - no weird categorical stuff
+data = pd.read_csv('/Users/viv/Documents/UCLA/101C/fire.csv')
+
+
+columns = ['row.id', 'year', 'firstInDistrict', 'dispatchSequence', 'elapsed_time']
+
+features = ['year', 'firstInDistrict', 'dispatchSequence']
+
+label = "elapsed_time"
+
+
+feature_cols = [tf.contrib.layers.real_valued_column(k)
+                  for k in features]
+
+regressor = tf.contrib.learn.DNNRegressor(feature_columns=feature_cols,
+                                          hidden_units=[10,10],
+                                         dropout = .075)
+
+def input_fn(data_set):
+  feature_cols = {k: tf.constant(data_set[k].values)
+                  for k in features}
+  labels = tf.constant(data_set[label].values)
+  return feature_cols, labels
+
+
+regressor.fit(input_fn=lambda: input_fn(data), steps=500)
+
+
+y = regressor.predict(input_fn=lambda: input_fn(prediction_set))
+
+# .predict() returns an iterator; convert to a list and print predictions
+predictions = list(itertools.islice(y, 6))
+print ("Predictions: {}".format(str(predictions)))
+
+#make sure prediction csv has a elapsed_time column with NaN 
+
+prediction = pd.read_csv('/Users/viv/Documents/UCLA/101C/test_numerical_.csv')
+
+y = regressor.predict(input_fn=lambda: input_fn(prediction))
+
+# .predict() returns an iterator; convert to a list and print predictions
+#530352 is the # of observations in the prediction set
+predictions = list(itertools.islice(y, 530352 ))
+print ("Predictions: {}".format(str(predictions)))
+
+extract = pd.DataFrame(predictions)
+extract.to_csv("ourpredictions.csv")
+###
